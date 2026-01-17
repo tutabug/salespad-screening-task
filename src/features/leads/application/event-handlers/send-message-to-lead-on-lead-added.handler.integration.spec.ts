@@ -8,7 +8,9 @@ import { SendMessageToLeadOnLeadAddedHandler } from './send-message-to-lead-on-l
 import { LeadAddedEvent } from '../../domain/events/lead-added.event';
 import { MessageGenerator } from '../../domain/services/message-generator';
 import { MessageRepository } from '../../domain/repositories/message.repository';
+import { ChannelResolver } from '../../domain/services/channel-resolver';
 import { StaticMessageGenerator } from '../../infrastructure/services/static-message-generator';
+import { DefaultChannelResolver } from '../../infrastructure/services/default-channel-resolver';
 import { FakeMessageRepository } from '../../infrastructure/repositories/fake-message.repository';
 import { BullMqCommandBus, CommandBus, COMMAND_QUEUE_NAME } from '@/shared/infrastructure/commands';
 import { CryptoUuidGenerator, UuidGenerator } from '@/shared/infrastructure/uuid';
@@ -51,6 +53,10 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
         {
           provide: MessageGenerator,
           useClass: StaticMessageGenerator,
+        },
+        {
+          provide: ChannelResolver,
+          useClass: DefaultChannelResolver,
         },
         {
           provide: MessageRepository,
@@ -125,7 +131,7 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
       expect(savedMessages[0].message.channel).toBe('email');
     });
 
-    it('should not dispatch command when lead has no email', async () => {
+    it('should dispatch WhatsApp command when lead has phone but no email', async () => {
       const event = new LeadAddedEvent(
         'event-456',
         'lead-789',
@@ -135,6 +141,36 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
           name: 'Jane Smith',
           email: null,
           phone: '+1234567890',
+          status: 'new',
+        },
+        new Date('2025-01-17T11:00:00Z'),
+      );
+
+      await eventEmitter.emitAsync(LeadAddedEvent.eventName, event);
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const jobs = await commandQueue.getJobs(['waiting', 'active', 'completed']);
+      expect(jobs).toHaveLength(1);
+      expect(jobs[0].data.payload.channel).toBe('whatsapp');
+      expect(jobs[0].data.payload.channelMessage.to).toBe('+1234567890');
+
+      // Verify message was saved
+      const savedMessages = fakeMessageRepository.getSavedMessages();
+      expect(savedMessages).toHaveLength(1);
+      expect(savedMessages[0].message.channel).toBe('whatsapp');
+    });
+
+    it('should not dispatch command when lead has no email or phone', async () => {
+      const event = new LeadAddedEvent(
+        'event-456',
+        'lead-789',
+        { requestId: 'req-101' },
+        {
+          id: 'lead-789',
+          name: 'Jane Smith',
+          email: null,
+          phone: null,
           status: 'new',
         },
         new Date('2025-01-17T11:00:00Z'),
