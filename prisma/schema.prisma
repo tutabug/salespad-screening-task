@@ -31,7 +31,8 @@ model Lead {
   createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  events LeadEvent[]
+  events   LeadEvent[]
+  messages Message[]
 
   @@map("leads")
 }
@@ -58,4 +59,37 @@ model LeadEvent {
   @@index([leadId])
   @@index([type])
   @@map("lead_events")
+}
+
+enum MessageChannel {
+  email
+  whatsapp
+  linkedin
+  voice
+  ads
+}
+
+enum MessageStatus {
+  pending
+  sent
+  delivered
+  failed
+}
+
+model Message {
+  id             BigInt        @id @default(autoincrement())
+  uuid           String        @unique @default(uuid()) @db.Uuid
+  channel        MessageChannel
+  channelMessage Json          @map("channel_message") @db.JsonB
+  status         MessageStatus @default(pending)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  sentAt         DateTime?     @map("sent_at") @db.Timestamptz
+
+  leadId BigInt @map("lead_id")
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([channel])
+  @@index([status])
+  @@map("messages")
 }

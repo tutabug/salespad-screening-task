@@ -2,8 +2,10 @@ import { Module } from '@nestjs/common';
 import { CreateLeadUseCase } from './application/use-cases/create-lead.use-case';
 import { SendMessageToLeadOnLeadAddedHandler } from './application/event-handlers/send-message-to-lead-on-lead-added.handler';
 import { LeadRepository } from './domain/repositories/lead.repository';
+import { MessageRepository } from './domain/repositories/message.repository';
 import { MessageGenerator } from './domain/services/message-generator';
 import { PrismaLeadRepository } from './infrastructure/repositories/prisma-lead.repository';
+import { PrismaMessageRepository } from './infrastructure/repositories/prisma-message.repository';
 import { StaticMessageGenerator } from './infrastructure/services/static-message-generator';
 import { LeadsController } from './presentation/controllers/leads.controller';
 import { CryptoUuidGenerator, UuidGenerator } from '@/shared/infrastructure/uuid';
@@ -17,6 +19,10 @@ import { BullMqCommandBus, CommandBus } from '@/shared/infrastructure/commands';
     {
       provide: LeadRepository,
       useClass: PrismaLeadRepository,
+    },
+    {
+      provide: MessageRepository,
+      useClass: PrismaMessageRepository,
     },
     {
       provide: UuidGenerator,

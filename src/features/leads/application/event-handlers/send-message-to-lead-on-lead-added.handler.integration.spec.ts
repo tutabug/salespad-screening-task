@@ -7,7 +7,9 @@ import { getQueueToken } from '@nestjs/bullmq';
 import { SendMessageToLeadOnLeadAddedHandler } from './send-message-to-lead-on-lead-added.handler';
 import { LeadAddedEvent } from '../../domain/events/lead-added.event';
 import { MessageGenerator } from '../../domain/services/message-generator';
+import { MessageRepository } from '../../domain/repositories/message.repository';
 import { StaticMessageGenerator } from '../../infrastructure/services/static-message-generator';
+import { FakeMessageRepository } from '../../infrastructure/repositories/fake-message.repository';
 import { BullMqCommandBus, CommandBus, COMMAND_QUEUE_NAME } from '@/shared/infrastructure/commands';
 import { CryptoUuidGenerator, UuidGenerator } from '@/shared/infrastructure/uuid';
 
@@ -16,9 +18,12 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
   let container: StartedRedisContainer;
   let eventEmitter: EventEmitter2;
   let commandQueue: Queue;
+  let fakeMessageRepository: FakeMessageRepository;
 
   beforeAll(async () => {
     container = await new RedisContainer('redis:7-alpine').start();
+
+    fakeMessageRepository = new FakeMessageRepository();
 
     module = await Test.createTestingModule({
       imports: [
@@ -47,6 +52,10 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
           provide: MessageGenerator,
           useClass: StaticMessageGenerator,
         },
+        {
+          provide: MessageRepository,
+          useValue: fakeMessageRepository,
+        },
       ],
     }).compile();
 
@@ -58,6 +67,7 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
 
   afterEach(async () => {
     await commandQueue.drain();
+    fakeMessageRepository.reset();
   });
 
   afterAll(async () => {
@@ -107,6 +117,12 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
           body: expect.stringContaining('Hi John Doe'),
         },
       });
+
+      // Verify message was saved to repository
+      const savedMessages = fakeMessageRepository.getSavedMessages();
+      expect(savedMessages).toHaveLength(1);
+      expect(savedMessages[0].leadId).toBe('lead-456');
+      expect(savedMessages[0].message.channel).toBe('email');
     });
 
     it('should not dispatch command when lead has no email', async () => {

@@ -9,6 +9,8 @@ import { ConfigModule } from '@nestjs/config';
 import { LeadsModule } from '../../leads.module';
 import { CreateLeadDto } from '../../application/dtos/create-lead.dto';
 import { LeadResponseDto } from '../../application/dtos/lead-response.dto';
+import { MessageRepository } from '../../domain/repositories/message.repository';
+import { FakeMessageRepository } from '../../infrastructure/repositories/fake-message.repository';
 import { FakeUuidGenerator, UuidGenerator } from '@/shared/infrastructure/uuid';
 import { CommandBus } from '@/shared/infrastructure/commands';
 import { FakeCommandBus } from '@/shared/infrastructure/commands/fake-command-bus';
@@ -26,6 +28,7 @@ describe('LeadsController (Integration)', () => {
   let prisma: PrismaService;
   let fakeUuidGenerator: FakeUuidGenerator;
   let fakeCommandBus: FakeCommandBus;
+  let fakeMessageRepository: FakeMessageRepository;
   let requestAgent: App;
 
   beforeAll(async () => {
@@ -43,6 +46,7 @@ describe('LeadsController (Integration)', () => {
 
     fakeUuidGenerator = new FakeUuidGenerator();
     fakeCommandBus = new FakeCommandBus();
+    fakeMessageRepository = new FakeMessageRepository();
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
@@ -71,6 +75,8 @@ describe('LeadsController (Integration)', () => {
       .useValue(fakeUuidGenerator)
       .overrideProvider(CommandBus)
       .useValue(fakeCommandBus)
+      .overrideProvider(MessageRepository)
+      .useValue(fakeMessageRepository)
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -91,6 +97,7 @@ describe('LeadsController (Integration)', () => {
     await prisma.lead.deleteMany();
     fakeCommandBus.reset();
     fakeUuidGenerator.reset();
+    fakeMessageRepository.reset();
   });
 
   afterAll(async () => {
