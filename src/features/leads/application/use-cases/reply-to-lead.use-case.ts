@@ -21,13 +21,12 @@ export class ReplyToLeadUseCase {
       dto.messageContent,
     );
 
-    const { event } = await this.leadRepository.replyToLead({
+    const { event } = await this.leadRepository.saveLeadReplayed({
       leadId,
       leadMessage: replyMessage,
       correlationIds: { replyId: this.uuidGenerator.generate() },
     });
 
-    // Emit event for async processing (AI reply generation)
     this.eventEmitter.emit(LeadRepliedEvent.eventName, event);
 
     return { messageId: replyMessage.id };

@@ -48,7 +48,9 @@ export class FakeLeadRepository extends LeadRepository {
     return { lead, event };
   }
 
-  async replyToLead(input: ReplyToLeadInput): Promise<{ lead: Lead; event: LeadRepliedEvent }> {
+  async saveLeadReplayed(
+    input: ReplyToLeadInput,
+  ): Promise<{ lead: Lead; event: LeadRepliedEvent }> {
     const leadIndex = this.leads.findIndex((l) => l.id === input.leadId);
     if (leadIndex === -1) {
       throw new Error(`Lead not found: ${input.leadId}`);

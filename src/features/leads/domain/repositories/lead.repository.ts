@@ -18,5 +18,7 @@ export interface ReplyToLeadInput {
 
 export abstract class LeadRepository {
   abstract addLead(input: AddLeadInput): Promise<{ lead: Lead; event: LeadAddedEvent }>;
-  abstract replyToLead(input: ReplyToLeadInput): Promise<{ lead: Lead; event: LeadRepliedEvent }>;
+  abstract saveLeadReplayed(
+    input: ReplyToLeadInput,
+  ): Promise<{ lead: Lead; event: LeadRepliedEvent }>;
 }

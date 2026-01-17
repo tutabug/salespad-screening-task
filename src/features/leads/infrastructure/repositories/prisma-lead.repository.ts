@@ -62,7 +62,9 @@ export class PrismaLeadRepository extends LeadRepository {
     };
   }
 
-  async replyToLead(input: ReplyToLeadInput): Promise<{ lead: Lead; event: LeadRepliedEvent }> {
+  async saveLeadReplayed(
+    input: ReplyToLeadInput,
+  ): Promise<{ lead: Lead; event: LeadRepliedEvent }> {
     const { leadId, leadMessage, correlationIds } = input;
     const eventId = this.uuidGenerator.generate();
 
