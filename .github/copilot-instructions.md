@@ -14,13 +14,13 @@ src/
     <feature-name>/
       domain/           # Pure business entities and repository interfaces
       application/      # Use cases and DTOs
-      infrastructure/   # Mongoose schemas and repository implementations
+      infrastructure/   # Repository implementations using Supabase client
       presentation/     # HTTP controllers
       <feature>.module.ts    # Feature module (self-contained)
   
   shared/
     infrastructure/
-      database/         # Shared MongoDB connection
+      database/         # Shared Supabase client configuration
 ```
 
 ### Key Principles
@@ -42,7 +42,7 @@ src/
 - **Clean Architecture Layers** within each feature:
   - `domain/` - Entities and repository interfaces
   - `application/` - Use cases and DTOs
-  - `infrastructure/` - Schemas and repository implementations
+  - `infrastructure/` - Repository implementations using Supabase client
   - `presentation/` - Controllers and API layer
 - **Tests Side-by-Side** with source files:
   - Unit tests: `*.spec.ts` (e.g., `entity.spec.ts`)
@@ -67,7 +67,7 @@ constructor(private readonly repository: ExampleRepository) {}
 providers: [
   {
     provide: ExampleRepository,
-    useClass: MongooseExampleRepository,
+    useClass: SupabaseExampleRepository,
   },
 ]
 ```
@@ -99,8 +99,7 @@ title: string;
    - DTOs in `application/dtos/` with validation decorators
    - Use cases in `application/use-cases/`
 4. Create infrastructure layer:
-   - Mongoose schemas in `infrastructure/schemas/`
-   - Repository implementations in `infrastructure/repositories/`
+   - Repository implementations in `infrastructure/repositories/` using Supabase client
 5. Create presentation layer:
    - Controllers in `presentation/controllers/`
 6. Create feature module `<feature-name>.module.ts` that wires everything together
@@ -132,23 +131,55 @@ afterEach(async () => {
 - Database runs on port configured in docker-compose
 - App runs on port 3000, Swagger at http://localhost:3000/api
 
-## Database Patterns
-
-### Schema Definition
-Use `@nestjs/mongoose` decorators:
-```typescript
-@Schema()
-export class EntityDocument extends Document {
-  @Prop({ required: true })
-  property: string;
-}
-```
+## Database Patterns (Supabase/PostgreSQL)
 
 ### Repository Implementation
-Map between Mongoose documents and domain entities:
+Use Supabase client to interact with database and map to/from domain entities:
 ```typescript
-private toDomain(document: EntityDocument): Entity {
-  return new Entity(document._id.toString(), document.property, ...);
+import { Injectable } from '@nestjs/common';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { ExampleRepository } from '../../domain/repositories/example.repository';
+import { Example } from '../../domain/entities/example.entity';
+
+@Injectable()
+export class SupabaseExampleRepository extends ExampleRepository {
+  constructor(private readonly supabase: SupabaseClient) {
+    super();
+  }
+
+  async save(entity: Example): Promise<Example> {
+    const row = this.toDatabase(entity);
+    const { data, error } = await this.supabase
+      .from('examples')
+      .upsert(row)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.toDomain(data);
+  }
+
+  async findById(id: string): Promise<Example | null> {
+    const { data, error } = await this.supabase
+      .from('examples')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) return null;
+    return data ? this.toDomain(data) : null;
+  }
+
+  private toDomain(row: any): Example {
+    return new Example(row.id, row.property, ...);
+  }
+
+  private toDatabase(entity: Example): any {
+    return {
+      id: entity.id,
+      property: entity.property,
+    };
+  }
 }
 ```
 
@@ -214,27 +245,40 @@ Already configured in `main.ts`:
 - `transform: true` - auto-transforms payloads to DTO instances
 
 ### Module Wiring
-Each feature module is self-contained and registers its own schemas:
+Each feature module is self-contained:
 ```typescript
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: EntityDocument.name, schema: EntitySchema }
-    ])
-  ],
   controllers: [EntityController],
   providers: [
     CreateEntityUseCase,
     {
       provide: EntityRepository,
-      useClass: MongooseEntityRepository,
+      useClass: SupabaseExampleRepository,
     },
   ],
 })
 export class EntityModule {}
 ```
 
-Shared database connection is in `DatabaseModule` (imported in `AppModule`).
+Shared Supabase client is configured in `DatabaseModule` and injected via NestJS DI (imported in `AppModule`).
+
+### Supabase Client Setup
+Create a provider for Supabase client in `shared/infrastructure/database/`:
+```typescript
+import { createClient } from '@supabase/supabase-js';
+
+export const SUPABASE_CLIENT = 'SUPABASE_CLIENT';
+
+export const SupabaseProvider = {
+  provide: SUPABASE_CLIENT,
+  useFactory: () => {
+    return createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_KEY,
+    );
+  },
+};
+```
 
 ## When Adding New Dependencies
 Always use `pnpm` to install packages and types if needed:
