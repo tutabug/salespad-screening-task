@@ -1,15 +1,19 @@
 import { Lead, LeadStatus } from '../../domain/entities/lead.entity';
+import { LeadEvent } from '../../domain/entities/lead-event.entity';
 import { LeadAddedEvent } from '../../domain/events/lead-added.event';
 import { LeadRepliedEvent } from '../../domain/events/lead-replied.event';
 import {
   LeadRepository,
   AddLeadInput,
   ReplyToLeadInput,
+  GetLeadByIdInput,
+  GetEventsForLeadInput,
 } from '../../domain/repositories/lead.repository';
 import { UuidGenerator } from '@/shared/infrastructure/uuid';
 
 export class FakeLeadRepository extends LeadRepository {
   private leads: Lead[] = [];
+  private events: LeadEvent<unknown>[] = [];
   private uuidGenerator: UuidGenerator;
 
   constructor(uuidGenerator: UuidGenerator) {
@@ -45,6 +49,8 @@ export class FakeLeadRepository extends LeadRepository {
       now,
     );
 
+    this.events.push(event);
+
     return { lead, event };
   }
 
@@ -78,7 +84,23 @@ export class FakeLeadRepository extends LeadRepository {
       now,
     );
 
+    this.events.push(event);
+
     return { lead: updatedLead, event };
+  }
+
+  async getLeadById(input: GetLeadByIdInput): Promise<Lead> {
+    const lead = this.leads.find((l) => l.id === input.leadId);
+    if (!lead) {
+      throw new Error(`Lead not found: ${input.leadId}`);
+    }
+    return lead;
+  }
+
+  async getEventsForLead(input: GetEventsForLeadInput): Promise<LeadEvent<unknown>[]> {
+    return this.events
+      .filter((e) => e.leadId === input.leadId)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
   }
 
   getAll(): Lead[] {
@@ -87,5 +109,6 @@ export class FakeLeadRepository extends LeadRepository {
 
   reset(): void {
     this.leads = [];
+    this.events = [];
   }
 }

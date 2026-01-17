@@ -13,12 +13,6 @@ class EnvironmentVariables {
 
   @IsNumber()
   PORT: number;
-
-  @IsString()
-  SUPABASE_URL: string;
-
-  @IsString()
-  SUPABASE_KEY: string;
 }
 
 export function validate(config: Record<string, unknown>) {

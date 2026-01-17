@@ -1,6 +1,7 @@
 import { Lead } from '../entities/lead.entity';
 import { LeadAddedEvent } from '../events/lead-added.event';
 import { LeadRepliedEvent } from '../events/lead-replied.event';
+import { LeadEvent } from '../entities/lead-event.entity';
 import { Message } from '@/shared/domain';
 
 export type LeadData = Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'status'>;
@@ -16,9 +17,19 @@ export interface ReplyToLeadInput {
   correlationIds: Record<string, string>;
 }
 
+export interface GetLeadByIdInput {
+  leadId: string;
+}
+
+export interface GetEventsForLeadInput {
+  leadId: string;
+}
+
 export abstract class LeadRepository {
   abstract addLead(input: AddLeadInput): Promise<{ lead: Lead; event: LeadAddedEvent }>;
   abstract saveLeadReplayed(
     input: ReplyToLeadInput,
   ): Promise<{ lead: Lead; event: LeadRepliedEvent }>;
+  abstract getLeadById(input: GetLeadByIdInput): Promise<Lead>;
+  abstract getEventsForLead(input: GetEventsForLeadInput): Promise<LeadEvent<unknown>[]>;
 }

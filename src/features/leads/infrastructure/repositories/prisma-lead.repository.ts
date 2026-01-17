@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'nestjs-prisma';
 import { Lead, LeadStatus } from '../../domain/entities/lead.entity';
-import { LeadEventType } from '../../domain/entities/lead-event.entity';
+import { LeadEvent, LeadEventType } from '../../domain/entities/lead-event.entity';
 import { LeadAddedEvent } from '../../domain/events/lead-added.event';
 import { LeadRepliedEvent } from '../../domain/events/lead-replied.event';
 import {
   AddLeadInput,
   LeadRepository,
   ReplyToLeadInput,
+  GetLeadByIdInput,
+  GetEventsForLeadInput,
 } from '../../domain/repositories/lead.repository';
 import { LeadStatus as PrismaLeadStatus } from '@prisma/client';
 import { UuidGenerator } from '@/shared/infrastructure/uuid';
@@ -114,6 +116,46 @@ export class PrismaLeadRepository extends LeadRepository {
         createdEvent.createdAt,
       ),
     };
+  }
+
+  async getLeadById(input: GetLeadByIdInput): Promise<Lead> {
+    const leadRecord = await this.prisma.lead.findUnique({
+      where: { uuid: input.leadId },
+    });
+
+    if (!leadRecord) {
+      throw new Error(`Lead not found: ${input.leadId}`);
+    }
+
+    return this.toDomain(leadRecord);
+  }
+
+  async getEventsForLead(input: GetEventsForLeadInput): Promise<LeadEvent<unknown>[]> {
+    const leadRecord = await this.prisma.lead.findUnique({
+      where: { uuid: input.leadId },
+      select: { id: true },
+    });
+
+    if (!leadRecord) {
+      throw new Error(`Lead not found: ${input.leadId}`);
+    }
+
+    const events = await this.prisma.leadEvent.findMany({
+      where: { leadId: leadRecord.id },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return events.map(
+      (event) =>
+        new LeadEvent(
+          event.uuid,
+          event.type as LeadEventType,
+          input.leadId,
+          event.correlationIds as Record<string, string>,
+          event.payload as unknown,
+          event.createdAt,
+        ),
+    );
   }
 
   private toDomain(record: {

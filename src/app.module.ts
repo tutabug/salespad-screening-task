@@ -27,6 +27,10 @@ import { CommandBus, BullMqCommandBus, COMMAND_QUEUE_NAME } from './shared/infra
     }),
     BullModule.registerQueue({
       name: COMMAND_QUEUE_NAME,
+      defaultJobOptions: {
+        removeOnComplete: true,
+        removeOnFail: false,
+      },
     }),
     PrismaModule.forRoot({
       isGlobal: true,
@@ -34,12 +38,7 @@ import { CommandBus, BullMqCommandBus, COMMAND_QUEUE_NAME } from './shared/infra
     LeadsModule,
     MessagingModule,
   ],
-  providers: [
-    {
-      provide: CommandBus,
-      useClass: BullMqCommandBus,
-    },
-  ],
-  exports: [CommandBus],
+  providers: [],
+  exports: [],
 })
 export class AppModule {}
