@@ -7,7 +7,7 @@ import { CreateLeadDto } from '../dtos/create-lead.dto';
 import { LeadResponseDto } from '../dtos/lead-response.dto';
 
 @Injectable()
-export class CreateLeadUseCase {
+export class AddLeadUseCase {
   constructor(
     private readonly leadRepository: LeadRepository,
     private readonly eventEmitter: EventEmitter2,

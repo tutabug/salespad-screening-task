@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { CreateLeadUseCase } from './application/use-cases/create-lead.use-case';
+import { AddLeadUseCase } from './application/use-cases/add-lead.use-case';
 import { ReplyToLeadUseCase } from './application/use-cases/reply-to-lead.use-case';
 import { SendMessageToLeadOnLeadAddedHandler } from './application/event-handlers/send-message-to-lead-on-lead-added.handler';
 import { SendMessageToLeadOnLeadRepliedHandler } from './application/event-handlers/send-message-to-lead-on-lead-replied.handler';
@@ -19,7 +19,7 @@ import { BullMqCommandBus, CommandBus } from '@/shared/infrastructure/commands';
 @Module({
   controllers: [LeadsController],
   providers: [
-    CreateLeadUseCase,
+    AddLeadUseCase,
     ReplyToLeadUseCase,
     SendMessageToLeadOnLeadAddedHandler,
     SendMessageToLeadOnLeadRepliedHandler,

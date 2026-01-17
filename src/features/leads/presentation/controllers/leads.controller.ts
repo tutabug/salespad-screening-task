@@ -3,14 +3,14 @@ import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiParam } from '@nestjs/s
 import { CreateLeadDto } from '../../application/dtos/create-lead.dto';
 import { LeadResponseDto } from '../../application/dtos/lead-response.dto';
 import { ReplyLeadDto } from '../../application/dtos/reply-lead.dto';
-import { CreateLeadUseCase } from '../../application/use-cases/create-lead.use-case';
+import { AddLeadUseCase } from '../../application/use-cases/add-lead.use-case';
 import { ReplyToLeadUseCase } from '../../application/use-cases/reply-to-lead.use-case';
 
 @ApiTags('leads')
 @Controller('leads')
 export class LeadsController {
   constructor(
-    private readonly createLeadUseCase: CreateLeadUseCase,
+    private readonly createLeadUseCase: AddLeadUseCase,
     private readonly replyToLeadUseCase: ReplyToLeadUseCase,
   ) {}
 

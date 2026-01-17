@@ -18,8 +18,8 @@ interface SendMessageJobData {
 }
 
 @Processor(COMMAND_QUEUE_NAME)
-export class SendMessageProcessor extends WorkerHost {
-  private readonly logger = new Logger(SendMessageProcessor.name);
+export class SendMessageCommandProcessor extends WorkerHost {
+  private readonly logger = new Logger(SendMessageCommandProcessor.name);
 
   constructor(private readonly senderRegistry: MessageSenderRegistry) {
     super();
