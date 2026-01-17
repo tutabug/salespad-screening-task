@@ -4,11 +4,9 @@ import { SendMessageToLeadOnLeadAddedHandler } from './application/event-handler
 import { LeadRepository } from './domain/repositories/lead.repository';
 import { MessageRepository } from './domain/repositories/message.repository';
 import { MessageGenerator } from './domain/services/message-generator';
-import { ChannelResolver } from './domain/services/channel-resolver';
-import { ChannelContentGeneratorRegistry } from './domain/services/channel-content-generator-registry';
-import { StaticMessageGenerator } from './application/services/static-message-generator';
-import { DefaultChannelResolver } from './application/services/default-channel-resolver';
-import { DefaultChannelContentGeneratorRegistry } from './application/services/default-channel-content-generator-registry';
+import { DefaultMessagesGenerator } from './application/services/message-generator';
+import { DefaultChannelResolver } from './application/services/channel-resolver';
+import { DefaultChannelContentGeneratorRegistry } from './application/services/channel-content-generator-registry';
 import { PrismaLeadRepository } from './infrastructure/repositories/prisma-lead.repository';
 import { PrismaMessageRepository } from './infrastructure/repositories/prisma-message.repository';
 import { FakeAIEmailContentGenerator } from './infrastructure/services/fake-ai-email-content-generator';
@@ -40,12 +38,9 @@ import { BullMqCommandBus, CommandBus } from '@/shared/infrastructure/commands';
       provide: CommandBus,
       useClass: BullMqCommandBus,
     },
+    DefaultChannelResolver,
     {
-      provide: ChannelResolver,
-      useClass: DefaultChannelResolver,
-    },
-    {
-      provide: ChannelContentGeneratorRegistry,
+      provide: DefaultChannelContentGeneratorRegistry,
       useFactory: (
         emailGenerator: FakeAIEmailContentGenerator,
         whatsAppGenerator: FakeAIWhatsAppContentGenerator,
@@ -59,7 +54,7 @@ import { BullMqCommandBus, CommandBus } from '@/shared/infrastructure/commands';
     },
     {
       provide: MessageGenerator,
-      useClass: StaticMessageGenerator,
+      useClass: DefaultMessagesGenerator,
     },
   ],
 })

@@ -8,11 +8,9 @@ import { SendMessageToLeadOnLeadAddedHandler } from './send-message-to-lead-on-l
 import { LeadAddedEvent } from '../../domain/events/lead-added.event';
 import { MessageRepository } from '../../domain/repositories/message.repository';
 import { MessageGenerator } from '../../domain/services/message-generator';
-import { ChannelResolver } from '../../domain/services/channel-resolver';
-import { ChannelContentGeneratorRegistry } from '../../domain/services/channel-content-generator-registry';
-import { StaticMessageGenerator } from '../services/static-message-generator';
-import { DefaultChannelResolver } from '../services/default-channel-resolver';
-import { DefaultChannelContentGeneratorRegistry } from '../services/default-channel-content-generator-registry';
+import { DefaultMessagesGenerator } from '../services/message-generator';
+import { DefaultChannelResolver } from '../services/channel-resolver';
+import { DefaultChannelContentGeneratorRegistry } from '../services/channel-content-generator-registry';
 import { FakeMessageRepository } from '../../infrastructure/repositories/fake-message.repository';
 import { FakeAIEmailContentGenerator } from '../../infrastructure/services/fake-ai-email-content-generator';
 import { FakeAIWhatsAppContentGenerator } from '../../infrastructure/services/fake-ai-whatsapp-content-generator';
@@ -60,12 +58,9 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
           provide: CommandBus,
           useClass: BullMqCommandBus,
         },
+        DefaultChannelResolver,
         {
-          provide: ChannelResolver,
-          useClass: DefaultChannelResolver,
-        },
-        {
-          provide: ChannelContentGeneratorRegistry,
+          provide: DefaultChannelContentGeneratorRegistry,
           useFactory: (
             emailGenerator: FakeAIEmailContentGenerator,
             whatsAppGenerator: FakeAIWhatsAppContentGenerator,
@@ -79,7 +74,7 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
         },
         {
           provide: MessageGenerator,
-          useClass: StaticMessageGenerator,
+          useClass: DefaultMessagesGenerator,
         },
       ],
     }).compile();

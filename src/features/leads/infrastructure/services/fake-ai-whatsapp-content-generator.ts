@@ -1,11 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { ChannelMessageContentGenerator } from '../../domain/services/channel-message-content-generator';
-import { MessageChannel } from '../../domain/value-objects/message-channel';
+import { MessageChannel, WhatsAppChannelMessage } from '@/shared/domain';
 import { LeadAddedEvent } from '../../domain/events/lead-added.event';
-import { WhatsAppChannelMessage } from '../../domain/entities/message.entity';
 
 @Injectable()
-export class FakeAIWhatsAppContentGenerator extends ChannelMessageContentGenerator<MessageChannel.WHATSAPP> {
+export class FakeAIWhatsAppContentGenerator {
   readonly channel = MessageChannel.WHATSAPP;
 
   async generate(event: LeadAddedEvent): Promise<WhatsAppChannelMessage> {

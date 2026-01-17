@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'nestjs-prisma';
-import { MessageChannel as PrismaMessageChannel } from '@prisma/client';
 import {
   MessageRepository,
   SaveMessagesInput,
   SavedMessage,
 } from '../../domain/repositories/message.repository';
-import { Message, ChannelMessageMap } from '../../domain/entities/message.entity';
-import { MessageChannel } from '../../domain/value-objects/message-channel';
+import { Message, ChannelMessageMap, MessageChannel } from '@/shared/domain';
+import { MessageChannel as PrismaMessageChannel } from '@prisma/client';
 
 @Injectable()
 export class PrismaMessageRepository extends MessageRepository {

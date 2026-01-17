@@ -1,5 +1,5 @@
 import { Command } from '@/shared/infrastructure/commands';
-import { Message } from '../../domain/entities/message.entity';
+import { Message } from '@/shared/domain';
 
 export class SendMessageCommand extends Command<Message> {
   readonly name = 'send-message';

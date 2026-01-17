@@ -5,11 +5,8 @@ import { BullModule } from '@nestjs/bullmq';
 import { PrismaModule } from 'nestjs-prisma';
 import { validate } from './shared/config/env.validation';
 import { LeadsModule } from './features/leads/leads.module';
-import {
-  CommandBus,
-  BullMqCommandBus,
-  COMMAND_QUEUE_NAME,
-} from './shared/infrastructure/commands';
+import { MessagingModule } from './features/messaging/messaging.module';
+import { CommandBus, BullMqCommandBus, COMMAND_QUEUE_NAME } from './shared/infrastructure/commands';
 
 @Module({
   imports: [
@@ -35,6 +32,7 @@ import {
       isGlobal: true,
     }),
     LeadsModule,
+    MessagingModule,
   ],
   providers: [
     {

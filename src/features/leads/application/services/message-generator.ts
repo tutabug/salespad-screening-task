@@ -1,18 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { Message } from '../../domain/entities/message.entity';
-import { MessageChannel } from '../../domain/value-objects/message-channel';
-import { MessageGenerator } from '../../domain/services/message-generator';
-import { ChannelResolver } from '../../domain/services/channel-resolver';
-import { ChannelContentGeneratorRegistry } from '../../domain/services/channel-content-generator-registry';
+import { MessageGenerator as MessagesGenerator } from '../../domain/services/message-generator';
+import { DefaultChannelResolver } from './channel-resolver';
+import { DefaultChannelContentGeneratorRegistry } from './channel-content-generator-registry';
 import { LeadAddedEvent } from '../../domain/events/lead-added.event';
 import { UuidGenerator } from '@/shared/infrastructure/uuid';
+import { Message, MessageChannel } from '@/shared/domain';
 
 @Injectable()
-export class StaticMessageGenerator extends MessageGenerator {
+export class DefaultMessagesGenerator extends MessagesGenerator {
   constructor(
     private readonly uuidGenerator: UuidGenerator,
-    private readonly channelResolver: ChannelResolver,
-    private readonly contentGeneratorRegistry: ChannelContentGeneratorRegistry,
+    private readonly channelResolver: DefaultChannelResolver,
+    private readonly contentGeneratorRegistry: DefaultChannelContentGeneratorRegistry,
   ) {
     super();
   }

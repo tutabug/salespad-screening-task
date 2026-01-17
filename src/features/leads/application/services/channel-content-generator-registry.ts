@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { ChannelContentGeneratorRegistry } from '../../domain/services/channel-content-generator-registry';
-import { ChannelMessageContentGenerator } from '../../domain/services/channel-message-content-generator';
-import { MessageChannel } from '../../domain/value-objects/message-channel';
+import { MessageChannel } from '@/shared/domain';
+import { LeadAddedEvent } from '../../domain/events/lead-added.event';
+
+interface ChannelMessageContentGenerator {
+  readonly channel: MessageChannel;
+  generate(event: LeadAddedEvent): Promise<any>;
+}
 
 @Injectable()
-export class DefaultChannelContentGeneratorRegistry extends ChannelContentGeneratorRegistry {
+export class DefaultChannelContentGeneratorRegistry {
   private readonly generators = new Map<MessageChannel, ChannelMessageContentGenerator>();
 
   register(generator: ChannelMessageContentGenerator): void {

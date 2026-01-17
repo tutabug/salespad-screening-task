@@ -1,4 +1,4 @@
-import { Message } from '../entities/message.entity';
+import { Message } from '@/shared/domain';
 
 export interface SaveMessagesInput {
   messages: Message[];

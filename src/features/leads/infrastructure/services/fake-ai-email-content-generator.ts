@@ -1,11 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { ChannelMessageContentGenerator } from '../../domain/services/channel-message-content-generator';
-import { MessageChannel } from '../../domain/value-objects/message-channel';
+import { MessageChannel, EmailChannelMessage } from '@/shared/domain';
 import { LeadAddedEvent } from '../../domain/events/lead-added.event';
-import { EmailChannelMessage } from '../../domain/entities/message.entity';
 
 @Injectable()
-export class FakeAIEmailContentGenerator extends ChannelMessageContentGenerator<MessageChannel.EMAIL> {
+export class FakeAIEmailContentGenerator {
   readonly channel = MessageChannel.EMAIL;
 
   async generate(event: LeadAddedEvent): Promise<EmailChannelMessage> {

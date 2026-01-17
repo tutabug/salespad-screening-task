@@ -1,4 +1,4 @@
-import { Message } from '../entities/message.entity';
+import { Message } from '@/shared/domain';
 import { LeadAddedEvent } from '../events/lead-added.event';
 
 export abstract class MessageGenerator {
