@@ -50,25 +50,11 @@ async handle(event: LeadAddedEvent): Promise<void> {
 
 ## Production Considerations
 
-For a production environment, consider replacing with a message broker:
+For a production environment, consider:
 
-### Apache Kafka
-**Best for**: High-throughput, event sourcing, audit trails
-```
-Producers → Topics (partitioned) → Consumer Groups
-```
-- **Topics**: `leads.added`, `leads.replied`, `messages.sent`
-- **Partitioning**: By leadId for ordering guarantees
-- **Retention**: Keep events for replay and debugging
-- **Consumer groups**: Scale handlers independently
+1. **Transactional Outbox Pattern** - Write events to database table atomically with business data, then process asynchronously. See [RFC-001: Transactional Outbox Pattern](../rfc/001-transactional-outbox-pattern.md).
 
-### RabbitMQ
-**Best for**: Complex routing, request-reply patterns
-```
-Publishers → Exchanges → Queues → Consumers
-```
-- **Exchanges**: Topic exchange for flexible routing
-- **Routing keys**: `lead.added`, `lead.replied.*`
-- **Dead letter queues**: Handle failed messages
-- **Acknowledgments**: Ensure at-least-once delivery
+2. **Message Broker** (Kafka, RabbitMQ) - For distributed systems with multiple services needing event access, ordering guarantees, and replay capability.
+
+3. **Hybrid Approach** - Keep in-memory emitter for local handlers, add outbox for critical events that must survive failures.
 
