@@ -11,9 +11,12 @@ An ADR is a document that captures an important architectural decision made alon
 | ID | Title | Status | Date |
 |----|-------|--------|------|
 | [ADR-001](001-vertical-slice-architecture.md) | Vertical Slice Architecture | Accepted | 2026-01-17 |
-| [ADR-002](002-supabase-client-over-orm.md) | Supabase Client over ORM | Accepted | 2026-01-17 |
+| [ADR-002](002-prisma-orm-for-database.md) | Prisma ORM for Database Access | Accepted | 2026-01-17 |
 | [ADR-003](003-abstract-classes-for-di.md) | Abstract Classes for Dependency Injection | Accepted | 2026-01-17 |
-| [ADR-004](004-in-memory-queue-for-mvp.md) | In-Memory Queue for MVP | Accepted | 2026-01-17 |
+| [ADR-004](004-bullmq-redis-for-commands.md) | BullMQ with Redis for Command Processing | Accepted | 2026-01-17 |
+| [ADR-005](005-cqrs-query-pattern.md) | CQRS Query Pattern for Read Operations | Accepted | 2026-01-17 |
+| [ADR-006](006-nestjs-framework.md) | NestJS as Application Framework | Accepted | 2026-01-17 |
+| [ADR-007](007-in-memory-event-emitter.md) | In-Memory Event Emitter for Domain Events | Accepted | 2026-01-17 |
 
 ## ADR Template
 

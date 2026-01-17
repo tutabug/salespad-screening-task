@@ -61,33 +61,17 @@ export class SendMessageCommandProcessor extends WorkerHost {
 - **Infrastructure dependency**: Requires Redis instance
 - **Complexity**: More setup than in-memory solution
 - **Local development**: Need to run Redis (mitigated by Docker Compose)
-- **No distributed processing**: Cannot scale horizontally
-- **No persistence**: Queue state only exists in memory
-- **Limited features**: No delayed jobs, priorities, or advanced retry strategies
 
 ## Alternatives Considered
 
-### BullMQ with Redis
+### In-Memory Queue
 **Rejected because**:
-- Requires Redis infrastructure (Docker container or managed service)
-- Adds complexity for a screening task
-- Overkill for demonstrating queue concepts
+- Jobs are lost on application restart
+- Cannot scale horizontally
+- No persistence or advanced retry strategies
 
-**Would be the choice for production** - clearly document this in architecture doc.
-
-### Supabase Edge Functions + pg_cron
+### AWS SQS / Google Cloud Tasks
 **Rejected because**:
-- Moves logic outside the NestJS application
-- Harder to demonstrate in a self-contained repo
-- Less familiar pattern for most developers
-
-### Database-backed Queue (using Supabase)
-**Considered as alternative**: Store jobs in a `jobs` table, poll for pending jobs.
-**Could be added later** if we need persistence without Redis complexity.
-
-## Future Evolution
-For production, this would be replaced with BullMQ + Redis:
-- Add `@nestjs/bullmq` package
-- Create job processors for each message type
-- Add Redis to docker-compose
-- Implement proper retry strategies with exponential backoff
+- Adds cloud provider lock-in
+- More complex setup for local development
+- Overkill when Redis provides sufficient capabilities
