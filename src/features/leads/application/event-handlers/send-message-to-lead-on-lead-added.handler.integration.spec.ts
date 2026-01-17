@@ -10,10 +10,10 @@ import { MessageRepository } from '../../domain/repositories/message.repository'
 import { MessageGenerator } from '../../domain/services/message-generator';
 import { ChannelResolver } from '../../domain/services/channel-resolver';
 import { ChannelContentGeneratorRegistry } from '../../domain/services/channel-content-generator-registry';
+import { StaticMessageGenerator } from '../services/static-message-generator';
+import { DefaultChannelResolver } from '../services/default-channel-resolver';
+import { DefaultChannelContentGeneratorRegistry } from '../services/default-channel-content-generator-registry';
 import { FakeMessageRepository } from '../../infrastructure/repositories/fake-message.repository';
-import { StaticMessageGenerator } from '../../infrastructure/services/static-message-generator';
-import { DefaultChannelResolver } from '../../infrastructure/services/default-channel-resolver';
-import { DefaultChannelContentGeneratorRegistry } from '../../infrastructure/services/default-channel-content-generator-registry';
 import { FakeAIEmailContentGenerator } from '../../infrastructure/services/fake-ai-email-content-generator';
 import { FakeAIWhatsAppContentGenerator } from '../../infrastructure/services/fake-ai-whatsapp-content-generator';
 import { CryptoUuidGenerator, UuidGenerator } from '@/shared/infrastructure/uuid';

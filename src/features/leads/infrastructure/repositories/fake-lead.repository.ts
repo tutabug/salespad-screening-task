@@ -4,7 +4,7 @@ import { LeadRepository } from '../../domain/repositories/lead.repository';
 export class FakeLeadRepository extends LeadRepository {
   private leads: Lead[] = [];
 
-  async save(lead: Lead): Promise<void> {
+  async addLead(lead: Lead): Promise<void> {
     const index = this.leads.findIndex((l) => l.id === lead.id);
     if (index >= 0) {
       this.leads[index] = lead;
