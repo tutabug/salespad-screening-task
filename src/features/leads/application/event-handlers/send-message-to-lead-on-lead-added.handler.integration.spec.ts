@@ -6,6 +6,8 @@ import { Queue } from 'bullmq';
 import { getQueueToken } from '@nestjs/bullmq';
 import { SendMessageToLeadOnLeadAddedHandler } from './send-message-to-lead-on-lead-added.handler';
 import { LeadAddedEvent } from '../../domain/events/lead-added.event';
+import { MessageGenerator } from '../../domain/services/message-generator';
+import { StaticMessageGenerator } from '../../infrastructure/services/static-message-generator';
 import { BullMqCommandBus, CommandBus, COMMAND_QUEUE_NAME } from '@/shared/infrastructure/commands';
 import { CryptoUuidGenerator, UuidGenerator } from '@/shared/infrastructure/uuid';
 
@@ -17,8 +19,6 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
 
   beforeAll(async () => {
     container = await new RedisContainer('redis:7-alpine').start();
-
-    const redisUrl = container.getConnectionUrl();
 
     module = await Test.createTestingModule({
       imports: [
@@ -43,6 +43,10 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
           provide: CommandBus,
           useClass: BullMqCommandBus,
         },
+        {
+          provide: MessageGenerator,
+          useClass: StaticMessageGenerator,
+        },
       ],
     }).compile();
 
@@ -63,7 +67,7 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
   });
 
   describe('when LeadAddedEvent is emitted', () => {
-    it('should dispatch SendMessageCommand to BullMQ queue', async () => {
+    it('should dispatch SendMessageCommand to BullMQ queue for email channel', async () => {
       const event = new LeadAddedEvent(
         'event-123',
         'lead-456',
@@ -80,7 +84,6 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
 
       await eventEmitter.emitAsync(LeadAddedEvent.eventName, event);
 
-      // Give BullMQ a moment to process
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       const jobs = await commandQueue.getJobs(['waiting', 'active', 'completed']);
@@ -92,18 +95,21 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
       expect(job.data.correlationIds).toEqual({
         requestId: 'req-789',
         eventId: 'event-123',
+        leadId: 'lead-456',
       });
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(job.data.payload).toMatchObject({
-        leadId: 'lead-456',
-        leadName: 'John Doe',
-        leadEmail: 'john@example.com',
-        leadPhone: null,
-        message: 'Hi! Thanks for your interest. We would love to learn more about your needs.',
+        channel: 'email',
+        channelMessage: {
+          to: 'john@example.com',
+          subject: 'Welcome, John Doe!',
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          body: expect.stringContaining('Hi John Doe'),
+        },
       });
     });
 
-    it('should include phone in command payload when lead has phone', async () => {
+    it('should not dispatch command when lead has no email', async () => {
       const event = new LeadAddedEvent(
         'event-456',
         'lead-789',
@@ -123,19 +129,10 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       const jobs = await commandQueue.getJobs(['waiting', 'active', 'completed']);
-      expect(jobs).toHaveLength(1);
-
-      const job = jobs[0];
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      expect(job.data.payload).toMatchObject({
-        leadId: 'lead-789',
-        leadName: 'Jane Smith',
-        leadEmail: null,
-        leadPhone: '+1234567890',
-      });
+      expect(jobs).toHaveLength(0);
     });
 
-    it('should generate unique command ID for each event', async () => {
+    it('should generate unique command and message IDs for each event', async () => {
       const event1 = new LeadAddedEvent(
         'event-1',
         'lead-1',
@@ -172,8 +169,13 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
       const jobs = await commandQueue.getJobs(['waiting', 'active', 'completed']);
       expect(jobs).toHaveLength(2);
 
-      const commandIds = jobs.map((job) => job.data.id);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const commandIds = jobs.map((job) => job.data.id as string);
       expect(commandIds[0]).not.toBe(commandIds[1]);
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const messageIds = jobs.map((job) => job.data.payload.id as string);
+      expect(messageIds[0]).not.toBe(messageIds[1]);
     });
   });
 });

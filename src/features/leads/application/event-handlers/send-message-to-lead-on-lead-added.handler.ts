@@ -1,34 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { LeadAddedEvent } from '../../domain/events/lead-added.event';
+import { MessageGenerator } from '../../domain/services/message-generator';
 import { SendMessageCommand } from '../commands/send-message.command';
 import { CommandBus } from '@/shared/infrastructure/commands';
 import { UuidGenerator } from '@/shared/infrastructure/uuid';
 
 @Injectable()
 export class SendMessageToLeadOnLeadAddedHandler {
-  private static readonly WELCOME_MESSAGE =
-    'Hi! Thanks for your interest. We would love to learn more about your needs.';
-
   constructor(
     private readonly commandBus: CommandBus,
     private readonly uuidGenerator: UuidGenerator,
+    private readonly messageGenerator: MessageGenerator,
   ) {}
 
   @OnEvent(LeadAddedEvent.eventName)
   async handle(event: LeadAddedEvent): Promise<void> {
-    const command = new SendMessageCommand(
-      this.uuidGenerator.generate(),
-      { ...event.correlationIds, eventId: event.id },
-      {
-        leadId: event.leadId,
-        leadName: event.payload.name,
-        leadEmail: event.payload.email,
-        leadPhone: event.payload.phone,
-        message: SendMessageToLeadOnLeadAddedHandler.WELCOME_MESSAGE,
-      },
+    const messages = this.messageGenerator.generate(event);
+
+    const commands = messages.map(
+      (message) =>
+        new SendMessageCommand(
+          this.uuidGenerator.generate(),
+          { ...event.correlationIds, eventId: event.id, leadId: event.leadId },
+          message,
+        ),
     );
 
-    await this.commandBus.send(command);
+    await Promise.all(commands.map((command) => this.commandBus.send(command)));
   }
 }

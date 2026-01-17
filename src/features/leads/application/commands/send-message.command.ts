@@ -1,17 +1,10 @@
 import { Command } from '@/shared/infrastructure/commands';
+import { Message } from '../../domain/entities/message.entity';
 
-export interface SendMessagePayload {
-  leadId: string;
-  leadName: string;
-  leadEmail: string | null;
-  leadPhone: string | null;
-  message: string;
-}
-
-export class SendMessageCommand extends Command<SendMessagePayload> {
+export class SendMessageCommand extends Command<Message> {
   readonly name = 'send-message';
 
-  constructor(id: string, correlationIds: Record<string, string>, payload: SendMessagePayload) {
+  constructor(id: string, correlationIds: Record<string, string>, payload: Message) {
     super(id, correlationIds, payload);
   }
 }
