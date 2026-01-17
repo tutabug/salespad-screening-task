@@ -1,4 +1,4 @@
-import { LeadDetailsResponseDto } from '../../dtos/lead-details-response.dto';
+import { LeadDetailsResponseDto } from '../dtos/lead-details-response.dto';
 
 export interface GetLeadDetailsQueryInput {
   leadId: string;

@@ -6,7 +6,7 @@ import { LeadDetailsResponseDto } from '../../application/dtos/lead-details-resp
 import { ReplyLeadDto } from '../../application/dtos/reply-lead.dto';
 import { AddLeadUseCase } from '../../application/use-cases/add-lead.use-case';
 import { ReplyToLeadUseCase } from '../../application/use-cases/reply-to-lead.use-case';
-import { GetLeadDetailsQuery } from '../../application/use-cases/get-lead-details';
+import { GetLeadDetailsQuery } from '../../application/use-cases/get-lead-details.query';
 
 @ApiTags('leads')
 @Controller('leads')

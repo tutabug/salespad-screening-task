@@ -1,11 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'nestjs-prisma';
-import { GetLeadDetailsQuery, GetLeadDetailsQueryInput } from './get-lead-details.query';
-import { LeadDetailsResponseDto, MessagesByChannel } from '../../dtos/lead-details-response.dto';
-import { LeadStatus } from '../../../domain/entities/lead.entity';
-import { LeadEvent, LeadEventType } from '../../../domain/entities/lead-event.entity';
+import {
+  GetLeadDetailsQuery,
+  GetLeadDetailsQueryInput,
+} from '../application/use-cases/get-lead-details.query';
+import {
+  LeadDetailsResponseDto,
+  MessagesByChannel,
+} from '../application/dtos/lead-details-response.dto';
+import { LeadStatus } from '../domain/entities/lead.entity';
+import { LeadEvent, LeadEventType } from '../domain/entities/lead-event.entity';
 import { Message, MessageChannel, ChannelMessageMap } from '@/shared/domain';
-import { MessageChannel as PrismaMessageChannel, LeadStatus as PrismaLeadStatus } from '@prisma/client';
+import {
+  MessageChannel as PrismaMessageChannel,
+  LeadStatus as PrismaLeadStatus,
+} from '@prisma/client';
 
 @Injectable()
 export class PrismaGetLeadDetailsQuery extends GetLeadDetailsQuery {
