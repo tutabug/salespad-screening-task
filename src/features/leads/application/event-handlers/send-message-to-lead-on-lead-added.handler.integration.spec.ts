@@ -6,18 +6,18 @@ import { Queue } from 'bullmq';
 import { getQueueToken } from '@nestjs/bullmq';
 import { SendMessageToLeadOnLeadAddedHandler } from './send-message-to-lead-on-lead-added.handler';
 import { LeadAddedEvent } from '../../domain/events/lead-added.event';
-import { MessageGenerator } from '../../domain/services/message-generator';
 import { MessageRepository } from '../../domain/repositories/message.repository';
+import { MessageGenerator } from '../../domain/services/message-generator';
 import { ChannelResolver } from '../../domain/services/channel-resolver';
 import { ChannelContentGeneratorRegistry } from '../../domain/services/channel-content-generator-registry';
+import { FakeMessageRepository } from '../../infrastructure/repositories/fake-message.repository';
 import { StaticMessageGenerator } from '../../infrastructure/services/static-message-generator';
 import { DefaultChannelResolver } from '../../infrastructure/services/default-channel-resolver';
 import { DefaultChannelContentGeneratorRegistry } from '../../infrastructure/services/default-channel-content-generator-registry';
 import { FakeAIEmailContentGenerator } from '../../infrastructure/services/fake-ai-email-content-generator';
 import { FakeAIWhatsAppContentGenerator } from '../../infrastructure/services/fake-ai-whatsapp-content-generator';
-import { FakeMessageRepository } from '../../infrastructure/repositories/fake-message.repository';
-import { BullMqCommandBus, CommandBus, COMMAND_QUEUE_NAME } from '@/shared/infrastructure/commands';
 import { CryptoUuidGenerator, UuidGenerator } from '@/shared/infrastructure/uuid';
+import { BullMqCommandBus, CommandBus, COMMAND_QUEUE_NAME } from '@/shared/infrastructure/commands';
 
 describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
   let module: TestingModule;
@@ -49,16 +49,16 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
         FakeAIEmailContentGenerator,
         FakeAIWhatsAppContentGenerator,
         {
+          provide: MessageRepository,
+          useValue: fakeMessageRepository,
+        },
+        {
           provide: UuidGenerator,
           useClass: CryptoUuidGenerator,
         },
         {
           provide: CommandBus,
           useClass: BullMqCommandBus,
-        },
-        {
-          provide: MessageGenerator,
-          useClass: StaticMessageGenerator,
         },
         {
           provide: ChannelResolver,
@@ -78,8 +78,8 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
           inject: [FakeAIEmailContentGenerator, FakeAIWhatsAppContentGenerator],
         },
         {
-          provide: MessageRepository,
-          useValue: fakeMessageRepository,
+          provide: MessageGenerator,
+          useClass: StaticMessageGenerator,
         },
       ],
     }).compile();
