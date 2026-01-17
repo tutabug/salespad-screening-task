@@ -23,9 +23,7 @@ export class FakeAIEmailContentGenerator extends ChannelMessageContentGenerator<
     previousMessages: Message<MessageChannel.EMAIL>[],
   ): Promise<EmailChannelMessage> {
     const previousMessage = previousMessages[0];
-    const leadEmail =
-      previousMessage?.channelMessage?.to ||
-      (event.payload.leadMessage.channelMessage as EmailChannelMessage).to;
+    const leadEmail = event.payload.lead.email;
 
     if (!leadEmail) {
       throw new Error('Lead email not found in previous messages or reply payload.');
@@ -33,7 +31,7 @@ export class FakeAIEmailContentGenerator extends ChannelMessageContentGenerator<
 
     return Promise.resolve({
       to: leadEmail,
-      subject: `RE: Your inquiry`,
+      subject: `RE: Your inquiry - ${previousMessage?.channelMessage.subject || 'previous message subject'}`,
       body: this.buildReplyEmailBody(event.payload.lead.name),
     });
   }
