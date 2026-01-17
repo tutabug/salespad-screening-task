@@ -2,7 +2,10 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { AddLeadUseCase } from './application/use-cases/add-lead.use-case';
 import { ReplyToLeadUseCase } from './application/use-cases/reply-to-lead.use-case';
-import { GetLeadDetailsUseCase } from './application/use-cases/get-lead-details.use-case';
+import {
+  GetLeadDetailsQuery,
+  PrismaGetLeadDetailsQuery,
+} from './application/use-cases/get-lead-details';
 import { SendMessageToLeadOnLeadAddedHandler } from './application/event-handlers/send-message-to-lead-on-lead-added.handler';
 import { SendMessageToLeadOnLeadRepliedHandler } from './application/event-handlers/send-message-to-lead-on-lead-replied.handler';
 import { LeadRepository } from './domain/repositories/lead.repository';
@@ -28,7 +31,6 @@ import { BullMqCommandBus, CommandBus, COMMAND_QUEUE_NAME } from '@/shared/infra
   providers: [
     AddLeadUseCase,
     ReplyToLeadUseCase,
-    GetLeadDetailsUseCase,
     SendMessageToLeadOnLeadAddedHandler,
     SendMessageToLeadOnLeadRepliedHandler,
     FakeAIEmailContentGenerator,
@@ -41,6 +43,10 @@ import { BullMqCommandBus, CommandBus, COMMAND_QUEUE_NAME } from '@/shared/infra
     {
       provide: MessageRepository,
       useClass: PrismaMessageRepository,
+    },
+    {
+      provide: GetLeadDetailsQuery,
+      useClass: PrismaGetLeadDetailsQuery,
     },
     {
       provide: UuidGenerator,

@@ -1,8 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Message } from '@/shared/domain';
+import { Message, MessageChannel } from '@/shared/domain';
 import { LeadEvent } from '../../domain/entities/lead-event.entity';
 
-export class LeadDetailsResponseDto {
+export type MessagesByChannel = {
+  [K in MessageChannel]?: Message<K>[];
+};
+
+export class LeadDto {
   @ApiProperty()
   id: string;
 
@@ -23,9 +27,14 @@ export class LeadDetailsResponseDto {
 
   @ApiProperty()
   updatedAt: Date;
+}
 
-  @ApiProperty({ type: 'array', items: { type: 'object' } })
-  messages: Message[];
+export class LeadDetailsResponseDto {
+  @ApiProperty({ type: LeadDto })
+  lead: LeadDto;
+
+  @ApiProperty({ type: 'object', additionalProperties: { type: 'array', items: { type: 'object' } } })
+  messagesByChannel: MessagesByChannel;
 
   @ApiProperty({ type: 'array', items: { type: 'object' } })
   events: LeadEvent<unknown>[];
