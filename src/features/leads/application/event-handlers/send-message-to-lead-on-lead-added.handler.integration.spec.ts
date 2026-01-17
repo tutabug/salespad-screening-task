@@ -13,7 +13,11 @@ import { DefaultChannelContentGeneratorRegistry } from '../services/channel-cont
 import { FakeMessageRepository } from '../../infrastructure/repositories/fake-message.repository';
 import { FakeAIEmailContentGenerator } from '../../infrastructure/services/fake-ai-email-content-generator';
 import { FakeAIWhatsAppContentGenerator } from '../../infrastructure/services/fake-ai-whatsapp-content-generator';
-import { CryptoUuidGenerator, UuidGenerator } from '@/shared/infrastructure/uuid';
+import {
+  CryptoUuidGenerator,
+  UuidGenerator,
+  FakeUuidGenerator,
+} from '@/shared/infrastructure/uuid';
 import { BullMqCommandBus, CommandBus, COMMAND_QUEUE_NAME } from '@/shared/infrastructure/commands';
 
 describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
@@ -26,7 +30,8 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
   beforeAll(async () => {
     container = await new RedisContainer('redis:7-alpine').start();
 
-    fakeMessageRepository = new FakeMessageRepository();
+    const uuidGenerator = new FakeUuidGenerator();
+    fakeMessageRepository = new FakeMessageRepository(uuidGenerator);
 
     module = await Test.createTestingModule({
       imports: [
@@ -120,7 +125,7 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(job.data.correlationIds).toEqual({
         requestId: 'req-789',
-        eventId: 'event-123',
+        triggeredByEventId: 'event-123',
         leadId: 'lead-456',
       });
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access

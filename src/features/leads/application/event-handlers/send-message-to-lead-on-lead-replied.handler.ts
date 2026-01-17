@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { LeadRepliedEvent } from '../../domain/events/lead-replied.event';
+import { MessageSentToLeadReplyEvent } from '../../domain/events/message-sent-to-lead-reply.event';
 import { DefaultChannelContentGeneratorRegistry } from '../services/channel-content-generator-registry';
 import { MessageRepository } from '../../domain/repositories/message.repository';
 import { SendMessageCommand } from '../commands/send-message.command';
@@ -15,6 +16,7 @@ export class SendMessageToLeadOnLeadRepliedHandler {
     private readonly uuidGenerator: UuidGenerator,
     private readonly contentGeneratorRegistry: DefaultChannelContentGeneratorRegistry,
     private readonly messageRepository: MessageRepository,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   @OnEvent(LeadRepliedEvent.eventName)
@@ -41,14 +43,19 @@ export class SendMessageToLeadOnLeadRepliedHandler {
       replayToLeadChannelMessage,
     );
 
-    const [savedMessage] = await this.messageRepository.saveAll({
-      messages: [aiReplyMessage],
-      leadId: event.payload.lead.id,
-    });
+    const { savedMessage, event: messageSentEvent } =
+      await this.messageRepository.saveMessageSentToLeadReply({
+        message: aiReplyMessage,
+        leadId: event.payload.lead.id,
+        replyToMessageId: event.payload.leadMessage.id,
+        correlationIds: { ...event.correlationIds, triggeredByEventId: event.id },
+      });
+
+    this.eventEmitter.emit(MessageSentToLeadReplyEvent.eventName, messageSentEvent);
 
     const command = new SendMessageCommand(
       this.uuidGenerator.generate(),
-      { ...event.correlationIds, eventId: event.id, leadId: event.payload.lead.id },
+      { ...event.correlationIds, triggeredByEventId: event.id, leadId: event.payload.lead.id },
       savedMessage.message,
     );
 
