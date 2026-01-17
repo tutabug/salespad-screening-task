@@ -1,54 +1,43 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'nestjs-prisma';
 import { Lead, LeadStatus } from '../../domain/entities/lead.entity';
-import { LeadEvent, LeadEventType } from '../../domain/entities/lead-event.entity';
-import { LeadData, LeadRepository } from '../../domain/repositories/lead.repository';
-import {
-  LeadStatus as PrismaLeadStatus,
-  LeadEventType as PrismaLeadEventType,
-} from '@prisma/client';
+import { LeadEventType } from '../../domain/entities/lead-event.entity';
+import { LeadAddedEvent } from '../../domain/events/lead-added.event';
+import { AddLeadInput, LeadRepository } from '../../domain/repositories/lead.repository';
+import { LeadStatus as PrismaLeadStatus } from '@prisma/client';
+import { UuidGenerator } from '@/shared/infrastructure/uuid';
 
 @Injectable()
 export class PrismaLeadRepository extends LeadRepository {
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uuidGenerator: UuidGenerator,
+  ) {
     super();
   }
 
-  async create(lead: LeadData): Promise<Lead> {
-    const created = await this.prisma.lead.create({
-      data: {
-        uuid: lead.id,
-        name: lead.name,
-        email: lead.email,
-        phone: lead.phone,
-        status: lead.status as PrismaLeadStatus,
-      },
-    });
+  async addLead(input: AddLeadInput): Promise<{ lead: Lead; event: LeadAddedEvent }> {
+    const { lead, correlationIds } = input;
+    const leadId = this.uuidGenerator.generate();
+    const eventId = this.uuidGenerator.generate();
 
-    return this.toDomain(created);
-  }
-
-  async createWithEvent<T = LeadData>(
-    lead: LeadData,
-    event: Omit<LeadEvent<T>, 'createdAt'>,
-  ): Promise<{ lead: Lead; event: LeadEvent<T> }> {
-    const [createdLead, createdEvent] = await this.prisma.$transaction(async (transaction) => {
-      const leadRecord = await transaction.lead.create({
+    const [createdLead, createdEvent] = await this.prisma.$transaction(async (tx) => {
+      const leadRecord = await tx.lead.create({
         data: {
-          uuid: lead.id,
+          uuid: leadId,
           name: lead.name,
           email: lead.email,
           phone: lead.phone,
-          status: lead.status as PrismaLeadStatus,
+          status: LeadStatus.NEW as PrismaLeadStatus,
         },
       });
 
-      const eventRecord = await transaction.leadEvent.create({
+      const eventRecord = await tx.leadEvent.create({
         data: {
-          uuid: event.id,
-          type: event.type as PrismaLeadEventType,
-          correlationIds: event.correlationIds,
-          payload: event.payload as object,
+          uuid: eventId,
+          type: LeadEventType.LEAD_ADDED,
+          correlationIds: { ...correlationIds, leadId },
+          payload: { ...lead, id: leadId, status: LeadStatus.NEW } as object,
           leadId: leadRecord.id,
         },
       });
@@ -58,7 +47,13 @@ export class PrismaLeadRepository extends LeadRepository {
 
     return {
       lead: this.toDomain(createdLead),
-      event: this.eventToDomain<T>(createdEvent),
+      event: new LeadAddedEvent(
+        createdEvent.uuid,
+        leadId,
+        createdEvent.correlationIds as Record<string, string>,
+        { ...lead, id: leadId, status: LeadStatus.NEW },
+        createdEvent.createdAt,
+      ),
     };
   }
 
@@ -79,23 +74,6 @@ export class PrismaLeadRepository extends LeadRepository {
       record.status as LeadStatus,
       record.createdAt,
       record.updatedAt,
-    );
-  }
-
-  private eventToDomain<T>(record: {
-    uuid: string;
-    type: PrismaLeadEventType;
-    correlationIds: unknown;
-    payload: unknown;
-    createdAt: Date;
-  }): LeadEvent<T> {
-    return new LeadEvent<T>(
-      record.uuid,
-      record.type as LeadEventType,
-      (record.correlationIds as Record<string, string>).leadId,
-      record.correlationIds as Record<string, string>,
-      record.payload as T,
-      record.createdAt,
     );
   }
 }

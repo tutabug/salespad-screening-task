@@ -2,6 +2,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { PrismaModule, PrismaService } from 'nestjs-prisma';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { execSync } from 'child_process';
 import request from 'supertest';
 import { ConfigModule } from '@nestjs/config';
@@ -9,6 +10,8 @@ import { LeadsModule } from '../../leads.module';
 import { CreateLeadDto } from '../../application/dtos/create-lead.dto';
 import { LeadResponseDto } from '../../application/dtos/lead-response.dto';
 import { FakeUuidGenerator, UuidGenerator } from '@/shared/infrastructure/uuid';
+import { CommandBus } from '@/shared/infrastructure/commands';
+import { FakeCommandBus } from '@/shared/infrastructure/commands/fake-command-bus';
 import { App } from 'supertest/types';
 
 interface ValidationErrorResponse {
@@ -22,6 +25,7 @@ describe('LeadsController (Integration)', () => {
   let container: StartedPostgreSqlContainer;
   let prisma: PrismaService;
   let fakeUuidGenerator: FakeUuidGenerator;
+  let fakeCommandBus: FakeCommandBus;
   let requestAgent: App;
 
   beforeAll(async () => {
@@ -38,6 +42,7 @@ describe('LeadsController (Integration)', () => {
     });
 
     fakeUuidGenerator = new FakeUuidGenerator();
+    fakeCommandBus = new FakeCommandBus();
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
@@ -50,6 +55,7 @@ describe('LeadsController (Integration)', () => {
             }),
           ],
         }),
+        EventEmitterModule.forRoot(),
         PrismaModule.forRoot({
           isGlobal: true,
           prismaServiceOptions: {
@@ -63,6 +69,8 @@ describe('LeadsController (Integration)', () => {
     })
       .overrideProvider(UuidGenerator)
       .useValue(fakeUuidGenerator)
+      .overrideProvider(CommandBus)
+      .useValue(fakeCommandBus)
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -81,6 +89,7 @@ describe('LeadsController (Integration)', () => {
 
   afterEach(async () => {
     await prisma.lead.deleteMany();
+    fakeCommandBus.reset();
     fakeUuidGenerator.reset();
   });
 
