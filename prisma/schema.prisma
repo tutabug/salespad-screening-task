@@ -31,5 +31,31 @@ model Lead {
   createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
+  events LeadEvent[]
+
   @@map("leads")
+}
+
+enum LeadEventType {
+  lead_added
+  message_sent
+  reply_received
+  ai_reply_sent
+  status_changed
+}
+
+model LeadEvent {
+  id             BigInt        @id @default(autoincrement())
+  uuid           String        @unique @default(uuid()) @db.Uuid
+  type           LeadEventType
+  correlationIds Json          @map("correlation_ids") @db.JsonB
+  payload        Json          @db.JsonB
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz
+
+  leadId BigInt @map("lead_id")
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([type])
+  @@map("lead_events")
 }
