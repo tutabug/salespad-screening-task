@@ -1,13 +1,11 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import { Pool } from 'pg';
+import { PrismaModule, PrismaService } from 'nestjs-prisma';
+import { execSync } from 'child_process';
 import request from 'supertest';
-import * as fs from 'fs';
-import * as path from 'path';
 import { ConfigModule } from '@nestjs/config';
 import { LeadsModule } from '../../leads.module';
-import { DatabaseModule } from '@/shared/infrastructure/database/database.module';
 import { CreateLeadDto } from '../../application/dtos/create-lead.dto';
 import { LeadResponseDto } from '../../application/dtos/lead-response.dto';
 import { FakeUuidGenerator, UuidGenerator } from '@/shared/infrastructure/uuid';
@@ -22,7 +20,7 @@ interface ValidationErrorResponse {
 describe('LeadsController (Integration)', () => {
   let app: INestApplication;
   let container: StartedPostgreSqlContainer;
-  let pool: Pool;
+  let prisma: PrismaService;
   let fakeUuidGenerator: FakeUuidGenerator;
   let requestAgent: App;
 
@@ -33,6 +31,12 @@ describe('LeadsController (Integration)', () => {
       .withPassword('test_password')
       .start();
 
+    const databaseUrl = container.getConnectionUri();
+
+    execSync('npx prisma migrate deploy', {
+      env: { ...process.env, DATABASE_URL: databaseUrl },
+    });
+
     fakeUuidGenerator = new FakeUuidGenerator();
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -42,11 +46,18 @@ describe('LeadsController (Integration)', () => {
           ignoreEnvFile: true,
           load: [
             () => ({
-              DATABASE_URL: container.getConnectionUri(),
+              DATABASE_URL: databaseUrl,
             }),
           ],
         }),
-        DatabaseModule,
+        PrismaModule.forRoot({
+          isGlobal: true,
+          prismaServiceOptions: {
+            prismaOptions: {
+              datasourceUrl: databaseUrl,
+            },
+          },
+        }),
         LeadsModule,
       ],
     })
@@ -64,23 +75,17 @@ describe('LeadsController (Integration)', () => {
     );
     await app.init();
 
-    pool = moduleFixture.get<Pool>(Pool);
+    prisma = moduleFixture.get<PrismaService>(PrismaService);
     requestAgent = app.getHttpServer() as unknown as App;
-
-    const migrationPath = path.join(
-      __dirname,
-      '../../../../../supabase/migrations/20260117000001_create_leads_table.sql',
-    );
-    const migrationSql = fs.readFileSync(migrationPath, 'utf8');
-    await pool.query(migrationSql);
   }, 60000);
 
   afterEach(async () => {
-    await pool.query('TRUNCATE TABLE leads CASCADE');
+    await prisma.lead.deleteMany();
     fakeUuidGenerator.reset();
   });
 
   afterAll(async () => {
+    await prisma.$disconnect();
     await app.close();
     await container.stop();
   });

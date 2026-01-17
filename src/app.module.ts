@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { PrismaModule } from 'nestjs-prisma';
 import { validate } from './shared/config/env.validation';
-import { DatabaseModule } from './shared/infrastructure/database';
 import { LeadsModule } from './features/leads/leads.module';
 
 @Module({
@@ -10,7 +10,9 @@ import { LeadsModule } from './features/leads/leads.module';
       isGlobal: true,
       validate,
     }),
-    DatabaseModule,
+    PrismaModule.forRoot({
+      isGlobal: true,
+    }),
     LeadsModule,
   ],
 })

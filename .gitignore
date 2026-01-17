@@ -26,3 +26,5 @@ build/
 
 # Coverage
 coverage/
+
+/generated/prisma
