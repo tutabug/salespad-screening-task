@@ -5,13 +5,12 @@ import { LeadRepository } from './domain/repositories/lead.repository';
 import { MessageRepository } from './domain/repositories/message.repository';
 import { MessageGenerator } from './domain/services/message-generator';
 import { ChannelResolver } from './domain/services/channel-resolver';
+import { ChannelContentGeneratorRegistry } from './domain/services/channel-content-generator-registry';
 import { PrismaLeadRepository } from './infrastructure/repositories/prisma-lead.repository';
 import { PrismaMessageRepository } from './infrastructure/repositories/prisma-message.repository';
-import {
-  StaticMessageGenerator,
-  CHANNEL_CONTENT_GENERATORS,
-} from './infrastructure/services/static-message-generator';
+import { StaticMessageGenerator } from './infrastructure/services/static-message-generator';
 import { DefaultChannelResolver } from './infrastructure/services/default-channel-resolver';
+import { DefaultChannelContentGeneratorRegistry } from './infrastructure/services/default-channel-content-generator-registry';
 import { FakeAIEmailContentGenerator } from './infrastructure/services/fake-ai-email-content-generator';
 import { FakeAIWhatsAppContentGenerator } from './infrastructure/services/fake-ai-whatsapp-content-generator';
 import { LeadsController } from './presentation/controllers/leads.controller';
@@ -46,11 +45,16 @@ import { BullMqCommandBus, CommandBus } from '@/shared/infrastructure/commands';
       useClass: DefaultChannelResolver,
     },
     {
-      provide: CHANNEL_CONTENT_GENERATORS,
+      provide: ChannelContentGeneratorRegistry,
       useFactory: (
         emailGenerator: FakeAIEmailContentGenerator,
         whatsAppGenerator: FakeAIWhatsAppContentGenerator,
-      ) => [emailGenerator, whatsAppGenerator],
+      ) => {
+        const registry = new DefaultChannelContentGeneratorRegistry();
+        registry.register(emailGenerator);
+        registry.register(whatsAppGenerator);
+        return registry;
+      },
       inject: [FakeAIEmailContentGenerator, FakeAIWhatsAppContentGenerator],
     },
     {

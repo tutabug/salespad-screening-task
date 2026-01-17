@@ -1,26 +1,20 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { Message, ChannelMessageMap } from '../../domain/entities/message.entity';
+import { Injectable } from '@nestjs/common';
+import { Message } from '../../domain/entities/message.entity';
 import { MessageChannel } from '../../domain/value-objects/message-channel';
 import { MessageGenerator } from '../../domain/services/message-generator';
 import { ChannelResolver } from '../../domain/services/channel-resolver';
-import { ChannelMessageContentGenerator } from '../../domain/services/channel-message-content-generator';
+import { ChannelContentGeneratorRegistry } from '../../domain/services/channel-content-generator-registry';
 import { LeadAddedEvent } from '../../domain/events/lead-added.event';
 import { UuidGenerator } from '@/shared/infrastructure/uuid';
 
-export const CHANNEL_CONTENT_GENERATORS = 'CHANNEL_CONTENT_GENERATORS';
-
 @Injectable()
 export class StaticMessageGenerator extends MessageGenerator {
-  private readonly generatorRegistry: Map<MessageChannel, ChannelMessageContentGenerator>;
-
   constructor(
     private readonly uuidGenerator: UuidGenerator,
     private readonly channelResolver: ChannelResolver,
-    @Inject(CHANNEL_CONTENT_GENERATORS)
-    contentGenerators: ChannelMessageContentGenerator[],
+    private readonly contentGeneratorRegistry: ChannelContentGeneratorRegistry,
   ) {
     super();
-    this.generatorRegistry = new Map(contentGenerators.map((gen) => [gen.channel, gen]));
   }
 
   async generate(event: LeadAddedEvent): Promise<Message[]> {
@@ -30,7 +24,7 @@ export class StaticMessageGenerator extends MessageGenerator {
   }
 
   private async createMessage(channel: MessageChannel, event: LeadAddedEvent): Promise<Message> {
-    const generator = this.generatorRegistry.get(channel);
+    const generator = this.contentGeneratorRegistry.get(channel);
     if (!generator) {
       throw new Error(`No content generator registered for channel: ${channel}`);
     }

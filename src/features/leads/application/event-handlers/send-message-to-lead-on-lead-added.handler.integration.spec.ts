@@ -9,11 +9,10 @@ import { LeadAddedEvent } from '../../domain/events/lead-added.event';
 import { MessageGenerator } from '../../domain/services/message-generator';
 import { MessageRepository } from '../../domain/repositories/message.repository';
 import { ChannelResolver } from '../../domain/services/channel-resolver';
-import {
-  StaticMessageGenerator,
-  CHANNEL_CONTENT_GENERATORS,
-} from '../../infrastructure/services/static-message-generator';
+import { ChannelContentGeneratorRegistry } from '../../domain/services/channel-content-generator-registry';
+import { StaticMessageGenerator } from '../../infrastructure/services/static-message-generator';
 import { DefaultChannelResolver } from '../../infrastructure/services/default-channel-resolver';
+import { DefaultChannelContentGeneratorRegistry } from '../../infrastructure/services/default-channel-content-generator-registry';
 import { FakeAIEmailContentGenerator } from '../../infrastructure/services/fake-ai-email-content-generator';
 import { FakeAIWhatsAppContentGenerator } from '../../infrastructure/services/fake-ai-whatsapp-content-generator';
 import { FakeMessageRepository } from '../../infrastructure/repositories/fake-message.repository';
@@ -66,11 +65,16 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
           useClass: DefaultChannelResolver,
         },
         {
-          provide: CHANNEL_CONTENT_GENERATORS,
+          provide: ChannelContentGeneratorRegistry,
           useFactory: (
             emailGenerator: FakeAIEmailContentGenerator,
             whatsAppGenerator: FakeAIWhatsAppContentGenerator,
-          ) => [emailGenerator, whatsAppGenerator],
+          ) => {
+            const registry = new DefaultChannelContentGeneratorRegistry();
+            registry.register(emailGenerator);
+            registry.register(whatsAppGenerator);
+            return registry;
+          },
           inject: [FakeAIEmailContentGenerator, FakeAIWhatsAppContentGenerator],
         },
         {
