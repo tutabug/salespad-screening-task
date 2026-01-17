@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { validate } from './shared/config/env.validation';
+import { DatabaseModule } from './shared/infrastructure/database';
+import { LeadsModule } from './features/leads/leads.module';
 
 @Module({
   imports: [
@@ -10,8 +10,8 @@ import { validate } from './shared/config/env.validation';
       isGlobal: true,
       validate,
     }),
+    DatabaseModule,
+    LeadsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
