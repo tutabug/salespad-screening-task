@@ -18,7 +18,7 @@ export class SendMessageToLeadOnLeadAddedHandler {
 
   @OnEvent(LeadAddedEvent.eventName)
   async handle(event: LeadAddedEvent): Promise<void> {
-    const messages = this.messageGenerator.generate(event);
+    const messages = await this.messageGenerator.generate(event);
 
     const savedMessages = await this.messageRepository.saveAll({
       messages,

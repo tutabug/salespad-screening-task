@@ -9,8 +9,13 @@ import { LeadAddedEvent } from '../../domain/events/lead-added.event';
 import { MessageGenerator } from '../../domain/services/message-generator';
 import { MessageRepository } from '../../domain/repositories/message.repository';
 import { ChannelResolver } from '../../domain/services/channel-resolver';
-import { StaticMessageGenerator } from '../../infrastructure/services/static-message-generator';
+import {
+  StaticMessageGenerator,
+  CHANNEL_CONTENT_GENERATORS,
+} from '../../infrastructure/services/static-message-generator';
 import { DefaultChannelResolver } from '../../infrastructure/services/default-channel-resolver';
+import { FakeAIEmailContentGenerator } from '../../infrastructure/services/fake-ai-email-content-generator';
+import { FakeAIWhatsAppContentGenerator } from '../../infrastructure/services/fake-ai-whatsapp-content-generator';
 import { FakeMessageRepository } from '../../infrastructure/repositories/fake-message.repository';
 import { BullMqCommandBus, CommandBus, COMMAND_QUEUE_NAME } from '@/shared/infrastructure/commands';
 import { CryptoUuidGenerator, UuidGenerator } from '@/shared/infrastructure/uuid';
@@ -42,6 +47,8 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
       ],
       providers: [
         SendMessageToLeadOnLeadAddedHandler,
+        FakeAIEmailContentGenerator,
+        FakeAIWhatsAppContentGenerator,
         {
           provide: UuidGenerator,
           useClass: CryptoUuidGenerator,
@@ -57,6 +64,14 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
         {
           provide: ChannelResolver,
           useClass: DefaultChannelResolver,
+        },
+        {
+          provide: CHANNEL_CONTENT_GENERATORS,
+          useFactory: (
+            emailGenerator: FakeAIEmailContentGenerator,
+            whatsAppGenerator: FakeAIWhatsAppContentGenerator,
+          ) => [emailGenerator, whatsAppGenerator],
+          inject: [FakeAIEmailContentGenerator, FakeAIWhatsAppContentGenerator],
         },
         {
           provide: MessageRepository,
