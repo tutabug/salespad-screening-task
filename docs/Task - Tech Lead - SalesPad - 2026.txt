@@ -1,0 +1,99 @@
+
+2
+
+Automatic Zoom
+  
+Join SalesPad — Tech Lead – Screening Task 
+ 
+About SalesPad: 
+SalesPad automates outbound sales using AI agents.  
+Prospecting and follow-ups are handled automatically. Sales teams focus on closing. 
+We’re building the AI that sells. 
+ 
+Website: www.salespad.app 
+ 
+DEMO VIDEO  
+ 
+What This Is: 
+Before moving forward, we ask Tech Lead candidates to complete a short practical 
+assignment. 
+ 
+It reflects the real work of the role and helps us understand how you think through 
+system design, structure backend logic, write clean code, and explain technical 
+decisions clearly along the way.. 
+ 
+Tasks 
+Your goal is to demonstrate how you think, architect, and implement core logic — not 
+build a full system. 
+ 
+1) Architecture Outline  
+Prepare a short document (PDF) describing: 
+• Core backend architecture 
+• Database/data structures 
+• Queue & retry logic 
+• Basic module/service breakdown 
+• How backend will interact with frontend 
+• High-level approach for handling multiple channels (Email, WhatsApp, 
+LinkedIn, Voice, Ads) 
+ 
+ 
+Format: 
+1–2 pages + 1 small diagram 
+We are looking for: clarity, structure, scalability mindset. 
+ 
+ 
+2) Mini Coding Task  
+Build a very simple prototype that demonstrates: 
+   Capture a lead (store name + email/phone) 
+   Queue a mock outbound email (e.g., "send email") 
+   Simulate prospect reply (manual webhook or endpoint) 
+   Generate AI-style reply (mock or real API) and send back 
+   Log events (lead added, message sent, reply received, AI reply sent, lead status) 
+ 
+Endpoints (or equivalent actions): 
+• POST /lead → save a lead 
+• POST /send → enqueue outbound message 
+• POST /reply → simulate prospect reply 
+• POST /ai/reply → generate & enqueue AI response 
+• GET /lead/:id → show lead + messages + job history + statuses 
+Focus: 
+Clear flow, retry thinking, clean structure, simple logic. 
+ 
+ 
+3) Short Loom Explainer (3-5 mins) 
+Record a Loom explaining: 
+• Architecture & flow 
+• Key decisions 
+• What you'd improve if you had more time 
+• Explain it as if talking to a non-technical founder 
+We are looking for: communication clarity & product mindset. 
+ 
+ 
+4) Short Daily Report Simulation  
+Write a sample daily update as if you were on the job: 
+Format: 
+   Completed today 
+  In progress 
+    Blockers / risks 
+       Plan for tomorrow 
+ 
+Deliverables 
+• GitHub repo 
+• Architecture doc (PDF/Markdown) 
+• Loom link 
+• Daily report text 
+ 
+Important Notes 
+• Keep everything simple 
+• Mock external systems (email, scraping, AI, etc.) 
+• We care about clarity, structure, and thinking, not polish 
+ 
+ 
+   Evaluation Focus 
+Area What we look for 
+Architecture Clear, modular thinking 
+Code Clean structure & readable flow 
+Queue logic Basic retry & state transitions 
+Communication Can explain simply & logically 
+Self-management Can organize work and report clearly 
+ 

@@ -4,6 +4,7 @@ import {
   MessageRepository,
   SaveMessagesInput,
   SavedMessage,
+  GetMessagesForLeadInput,
 } from '../../domain/repositories/message.repository';
 import { Message, ChannelMessageMap, MessageChannel } from '@/shared/domain';
 import { MessageChannel as PrismaMessageChannel } from '@prisma/client';
@@ -52,6 +53,28 @@ export class PrismaMessageRepository extends MessageRepository {
 
       return savedMessages;
     });
+  }
+
+  async getMessagesForLead(input: GetMessagesForLeadInput): Promise<Message[]> {
+    const lead = await this.prisma.lead.findUniqueOrThrow({
+      where: { uuid: input.leadId },
+      select: { id: true },
+    });
+
+    const messages = await this.prisma.message.findMany({
+      where: { leadId: lead.id },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return messages.map(
+      (msg) =>
+        new Message(
+          msg.uuid,
+          this.mapChannelFromPrisma(msg.channel),
+          msg.channelMessage as unknown as ChannelMessageMap[MessageChannel],
+          msg.createdAt,
+        ),
+    );
   }
 
   private mapChannelToPrisma(channel: MessageChannel): PrismaMessageChannel {

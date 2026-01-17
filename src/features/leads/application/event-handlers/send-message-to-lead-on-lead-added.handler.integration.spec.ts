@@ -7,7 +7,6 @@ import { getQueueToken } from '@nestjs/bullmq';
 import { SendMessageToLeadOnLeadAddedHandler } from './send-message-to-lead-on-lead-added.handler';
 import { LeadAddedEvent } from '../../domain/events/lead-added.event';
 import { MessageRepository } from '../../domain/repositories/message.repository';
-import { MessageGenerator } from '../../domain/services/message-generator';
 import { DefaultMessagesGenerator } from '../services/message-generator';
 import { DefaultChannelResolver } from '../services/channel-resolver';
 import { DefaultChannelContentGeneratorRegistry } from '../services/channel-content-generator-registry';
@@ -46,6 +45,7 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
         SendMessageToLeadOnLeadAddedHandler,
         FakeAIEmailContentGenerator,
         FakeAIWhatsAppContentGenerator,
+        DefaultMessagesGenerator,
         {
           provide: MessageRepository,
           useValue: fakeMessageRepository,
@@ -71,10 +71,6 @@ describe('SendMessageToLeadOnLeadAddedHandler (Integration)', () => {
             return registry;
           },
           inject: [FakeAIEmailContentGenerator, FakeAIWhatsAppContentGenerator],
-        },
-        {
-          provide: MessageGenerator,
-          useClass: DefaultMessagesGenerator,
         },
       ],
     }).compile();

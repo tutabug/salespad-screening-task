@@ -2,7 +2,9 @@ import {
   MessageRepository,
   SaveMessagesInput,
   SavedMessage,
+  GetMessagesForLeadInput,
 } from '../../domain/repositories/message.repository';
+import { Message } from '@/shared/domain';
 
 export class FakeMessageRepository extends MessageRepository {
   private savedMessages: SavedMessage[] = [];
@@ -15,6 +17,13 @@ export class FakeMessageRepository extends MessageRepository {
     }));
     this.savedMessages.push(...results);
     return results;
+  }
+
+  async getMessagesForLead(input: GetMessagesForLeadInput): Promise<Message[]> {
+    return this.savedMessages
+      .filter((saved) => saved.leadId === input.leadId)
+      .map((saved) => saved.message)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
   }
 
   getSavedMessages(): SavedMessage[] {

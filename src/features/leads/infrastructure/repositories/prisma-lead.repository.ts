@@ -3,7 +3,12 @@ import { PrismaService } from 'nestjs-prisma';
 import { Lead, LeadStatus } from '../../domain/entities/lead.entity';
 import { LeadEventType } from '../../domain/entities/lead-event.entity';
 import { LeadAddedEvent } from '../../domain/events/lead-added.event';
-import { AddLeadInput, LeadRepository } from '../../domain/repositories/lead.repository';
+import { LeadRepliedEvent } from '../../domain/events/lead-replied.event';
+import {
+  AddLeadInput,
+  LeadRepository,
+  ReplyToLeadInput,
+} from '../../domain/repositories/lead.repository';
 import { LeadStatus as PrismaLeadStatus } from '@prisma/client';
 import { UuidGenerator } from '@/shared/infrastructure/uuid';
 
@@ -52,6 +57,58 @@ export class PrismaLeadRepository extends LeadRepository {
         leadId,
         createdEvent.correlationIds as Record<string, string>,
         { ...lead, id: leadId, status: LeadStatus.NEW },
+        createdEvent.createdAt,
+      ),
+    };
+  }
+
+  async replyToLead(input: ReplyToLeadInput): Promise<{ lead: Lead; event: LeadRepliedEvent }> {
+    const { leadId, leadMessage, correlationIds } = input;
+    const eventId = this.uuidGenerator.generate();
+
+    const [updatedLead, createdEvent, _] = await this.prisma.$transaction(async (tx) => {
+      const leadRecord = await tx.lead.findUnique({ where: { uuid: leadId } });
+      if (!leadRecord) {
+        throw new Error(`Lead not found: ${leadId}`);
+      }
+
+      const updated = await tx.lead.update({
+        where: { uuid: leadId },
+        data: { status: LeadStatus.REPLIED as PrismaLeadStatus },
+      });
+
+      const messageRecord = await tx.message.create({
+        data: {
+          uuid: leadMessage.id,
+          channel: leadMessage.channel,
+          channelMessage: leadMessage.channelMessage as object,
+          leadId: leadRecord.id,
+        },
+      });
+
+      const payload = { leadId, leadMessage };
+      const eventRecord = await tx.leadEvent.create({
+        data: {
+          uuid: eventId,
+          type: LeadEventType.REPLY_RECEIVED,
+          correlationIds: { ...correlationIds, leadId },
+          payload: payload as object,
+          leadId: leadRecord.id,
+        },
+      });
+
+      return [updated, eventRecord, messageRecord] as const;
+    });
+
+    const domainLead = this.toDomain(updatedLead);
+
+    return {
+      lead: domainLead,
+      event: new LeadRepliedEvent(
+        createdEvent.uuid,
+        domainLead,
+        createdEvent.correlationIds as Record<string, string>,
+        { lead: domainLead, leadMessage },
         createdEvent.createdAt,
       ),
     };

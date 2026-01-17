@@ -1,13 +1,18 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Param, Post } from '@nestjs/common';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags, ApiParam } from '@nestjs/swagger';
 import { CreateLeadDto } from '../../application/dtos/create-lead.dto';
 import { LeadResponseDto } from '../../application/dtos/lead-response.dto';
+import { ReplyLeadDto } from '../../application/dtos/reply-lead.dto';
 import { CreateLeadUseCase } from '../../application/use-cases/create-lead.use-case';
+import { ReplyToLeadUseCase } from '../../application/use-cases/reply-to-lead.use-case';
 
 @ApiTags('leads')
-@Controller('lead')
+@Controller('leads')
 export class LeadsController {
-  constructor(private readonly createLeadUseCase: CreateLeadUseCase) {}
+  constructor(
+    private readonly createLeadUseCase: CreateLeadUseCase,
+    private readonly replyToLeadUseCase: ReplyToLeadUseCase,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new lead' })
@@ -16,5 +21,18 @@ export class LeadsController {
   @ApiResponse({ status: 400, description: 'Validation error' })
   async create(@Body() dto: CreateLeadDto): Promise<LeadResponseDto> {
     return this.createLeadUseCase.execute(dto);
+  }
+
+  @Post(':id/reply')
+  @ApiOperation({ summary: 'Handle a reply from a lead' })
+  @ApiParam({ name: 'id', description: 'Lead ID' })
+  @ApiBody({ type: ReplyLeadDto })
+  @ApiResponse({ status: 200, description: 'Reply processed successfully' })
+  @ApiResponse({ status: 404, description: 'Lead not found' })
+  async reply(
+    @Param('id') leadId: string,
+    @Body() dto: ReplyLeadDto,
+  ): Promise<{ messageId: string }> {
+    return this.replyToLeadUseCase.execute(leadId, dto);
   }
 }

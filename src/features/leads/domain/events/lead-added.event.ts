@@ -1,5 +1,7 @@
 import { LeadEvent, LeadEventType } from '../entities/lead-event.entity';
-import { LeadAddedPayload } from '../repositories/lead.repository';
+import { LeadData } from '../repositories/lead.repository';
+
+export type LeadAddedPayload = LeadData & { id: string; status: string };
 
 export class LeadAddedEvent extends LeadEvent<LeadAddedPayload> {
   static readonly eventName = 'lead.added' as const;

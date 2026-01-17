@@ -106,14 +106,14 @@ describe('LeadsController (Integration)', () => {
     await container.stop();
   });
 
-  describe('POST /lead', () => {
+  describe('POST /leads', () => {
     it('should create a lead with name and email', async () => {
       const createLeadDto: CreateLeadDto = {
         name: 'John Doe',
         email: 'john@example.com',
       };
 
-      const response = await request(requestAgent).post('/lead').send(createLeadDto);
+      const response = await request(requestAgent).post('/leads').send(createLeadDto);
       expect(response.status).toBe(201);
 
       const body = response.body as LeadResponseDto;
@@ -130,7 +130,7 @@ describe('LeadsController (Integration)', () => {
         phone: '+1234567890',
       };
 
-      const response = await request(requestAgent).post('/lead').send(createLeadDto);
+      const response = await request(requestAgent).post('/leads').send(createLeadDto);
       expect(response.status).toBe(201);
 
       const body = response.body as LeadResponseDto;
@@ -147,7 +147,7 @@ describe('LeadsController (Integration)', () => {
         phone: '+1987654321',
       };
 
-      const response = await request(requestAgent).post('/lead').send(createLeadDto);
+      const response = await request(requestAgent).post('/leads').send(createLeadDto);
 
       expect(response.status).toBe(201);
       const body = response.body as LeadResponseDto;
@@ -163,7 +163,7 @@ describe('LeadsController (Integration)', () => {
         email: 'john@example.com',
       };
 
-      const response = await request(requestAgent).post('/lead').send(createLeadDto);
+      const response = await request(requestAgent).post('/leads').send(createLeadDto);
 
       expect(response.status).toBe(400);
       const body = response.body as ValidationErrorResponse;
@@ -175,7 +175,7 @@ describe('LeadsController (Integration)', () => {
         name: 'John Doe',
       };
 
-      const response = await request(requestAgent).post('/lead').send(createLeadDto);
+      const response = await request(requestAgent).post('/leads').send(createLeadDto);
 
       expect(response.status).toBe(400);
       const body = response.body as ValidationErrorResponse;
@@ -188,7 +188,7 @@ describe('LeadsController (Integration)', () => {
         email: 'invalid-email',
       };
 
-      const response = await request(requestAgent).post('/lead').send(createLeadDto);
+      const response = await request(requestAgent).post('/leads').send(createLeadDto);
 
       expect(response.status).toBe(400);
       const body = response.body as ValidationErrorResponse;

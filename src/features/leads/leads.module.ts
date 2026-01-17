@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { CreateLeadUseCase } from './application/use-cases/create-lead.use-case';
+import { ReplyToLeadUseCase } from './application/use-cases/reply-to-lead.use-case';
 import { SendMessageToLeadOnLeadAddedHandler } from './application/event-handlers/send-message-to-lead-on-lead-added.handler';
+import { SendMessageToLeadOnLeadRepliedHandler } from './application/event-handlers/send-message-to-lead-on-lead-replied.handler';
 import { LeadRepository } from './domain/repositories/lead.repository';
 import { MessageRepository } from './domain/repositories/message.repository';
-import { MessageGenerator } from './domain/services/message-generator';
 import { DefaultMessagesGenerator } from './application/services/message-generator';
 import { DefaultChannelResolver } from './application/services/channel-resolver';
 import { DefaultChannelContentGeneratorRegistry } from './application/services/channel-content-generator-registry';
@@ -19,9 +20,12 @@ import { BullMqCommandBus, CommandBus } from '@/shared/infrastructure/commands';
   controllers: [LeadsController],
   providers: [
     CreateLeadUseCase,
+    ReplyToLeadUseCase,
     SendMessageToLeadOnLeadAddedHandler,
+    SendMessageToLeadOnLeadRepliedHandler,
     FakeAIEmailContentGenerator,
     FakeAIWhatsAppContentGenerator,
+    DefaultMessagesGenerator,
     {
       provide: LeadRepository,
       useClass: PrismaLeadRepository,
@@ -51,10 +55,6 @@ import { BullMqCommandBus, CommandBus } from '@/shared/infrastructure/commands';
         return registry;
       },
       inject: [FakeAIEmailContentGenerator, FakeAIWhatsAppContentGenerator],
-    },
-    {
-      provide: MessageGenerator,
-      useClass: DefaultMessagesGenerator,
     },
   ],
 })

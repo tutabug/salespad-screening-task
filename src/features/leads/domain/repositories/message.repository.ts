@@ -11,6 +11,11 @@ export interface SavedMessage {
   message: Message;
 }
 
+export interface GetMessagesForLeadInput {
+  leadId: string;
+}
+
 export abstract class MessageRepository {
   abstract saveAll(input: SaveMessagesInput): Promise<SavedMessage[]>;
+  abstract getMessagesForLead(input: GetMessagesForLeadInput): Promise<Message[]>;
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { LeadAddedEvent } from '../../domain/events/lead-added.event';
-import { MessageGenerator } from '../../domain/services/message-generator';
+import { DefaultMessagesGenerator } from '../services/message-generator';
 import { MessageRepository, SavedMessage } from '../../domain/repositories/message.repository';
 import { SendMessageCommand } from '../commands/send-message.command';
 import { CommandBus } from '@/shared/infrastructure/commands';
@@ -12,7 +12,7 @@ export class SendMessageToLeadOnLeadAddedHandler {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly uuidGenerator: UuidGenerator,
-    private readonly messageGenerator: MessageGenerator,
+    private readonly messageGenerator: DefaultMessagesGenerator,
     private readonly messageRepository: MessageRepository,
   ) {}
 
