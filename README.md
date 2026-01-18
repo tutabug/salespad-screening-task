@@ -1,106 +1,73 @@
-# SalesPad Tech Lead Screening Task
+# SalesPad Screening Task
 
-A lead management API with AI-powered messaging, demonstrating clean architecture principles.
+A lead management API with event-driven messaging, demonstrating clean architecture principles.
 
 ## Tech Stack
 
 - **Framework**: NestJS
-- **Database**: Supabase (PostgreSQL)
-- **Architecture**: Vertical Slice Architecture with Clean Architecture layers
-- **Package Manager**: pnpm
+- **Database**: PostgreSQL + Prisma ORM
+- **Queue**: BullMQ + Redis
+- **Architecture**: Vertical Slice + Clean Architecture
 
-## Project Structure
-
-```
-src/
-  features/           # Vertical slices (leads, messaging, events)
-    <feature>/
-      domain/         # Entities and repository interfaces
-      application/    # Use cases and DTOs
-      infrastructure/ # Repository implementations
-      presentation/   # Controllers
-  shared/
-    config/           # Environment validation
-    infrastructure/   # Database configuration
-```
-
-## Getting Started
+## Quick Start
 
 ### Prerequisites
 
 - Node.js 20+
-- pnpm (`npm install -g pnpm`)
-- Supabase account (or local instance)
+- pnpm
+- Docker & Docker Compose
 
-### Installation
+### Setup
 
 ```bash
+# Install dependencies
 pnpm install
-```
 
-### Environment Setup
+# Start PostgreSQL & Redis
+docker-compose up -d
 
-Copy the example environment file and configure your Supabase credentials:
+# Run migrations
+pnpm prisma migrate dev
 
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your Supabase credentials:
-
-```env
-NODE_ENV=development
-PORT=3000
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your-anon-key
-```
-
-### Running the Application
-
-```bash
-# Development mode with hot reload
-pnpm run start:dev
-
-# Production mode
-pnpm run start:prod
-
-# Using Docker
-docker-compose up
+# Start the server
+pnpm start:dev
 ```
 
 ### API Documentation
 
-Swagger UI is available at: http://localhost:3000/api
-
-## Available Scripts
-
-```bash
-pnpm run start:dev    # Development with hot reload
-pnpm run start:prod   # Production mode
-pnpm run build        # Build the project
-pnpm run lint         # Run ESLint
-pnpm run format       # Format code with Prettier
-pnpm run test         # Run unit tests
-pnpm run test:e2e     # Run e2e tests
-```
+Swagger UI available at: http://localhost:3000/api
 
 ## API Endpoints
 
-| Method | Endpoint      | Description                    |
-|--------|---------------|--------------------------------|
-| POST   | /lead         | Create a new lead              |
-| GET    | /lead/:id     | Get lead with messages & jobs  |
-| POST   | /send         | Queue outbound message         |
-| POST   | /reply        | Simulate prospect reply        |
-| POST   | /ai/reply     | Generate & queue AI response   |
+| Method | Endpoint            | Description                          |
+|--------|---------------------|--------------------------------------|
+| POST   | /leads              | Create a lead (triggers welcome msg) |
+| POST   | /leads/:id/reply    | Simulate prospect reply (triggers AI response) |
+| GET    | /leads/:id          | Get lead + messages + events         |
 
-## Architecture Highlights
+## Project Structure
 
-- **Vertical Slice Architecture**: Each feature is self-contained
-- **Clean Architecture Layers**: Domain → Application → Infrastructure → Presentation
-- **Dependency Injection**: Abstract classes as injection tokens
-- **Validation**: class-validator with global validation pipe
-- **Documentation**: Swagger/OpenAPI auto-generated
+```
+src/features/leads/
+├── presentation/     # Controllers & DTOs
+├── application/      # Use Cases (commands) & Queries (reads)
+├── domain/           # Entities, events, repository interfaces
+└── infrastructure/   # Prisma repositories, queue processors
+```
+
+## Documentation
+
+- **[Architecture Decision Records](docs/adr/)** – Key technical decisions (Prisma, BullMQ, CQRS, etc.)
+- **[RFCs](docs/rfc/)** – Proposed improvements (Transactional Outbox Pattern)
+
+## Scripts
+
+```bash
+pnpm start:dev        # Development with hot reload
+pnpm build            # Build for production
+pnpm test:integration # Run integration tests
+pnpm lint             # Run ESLint
+```
 
 ## License
 
